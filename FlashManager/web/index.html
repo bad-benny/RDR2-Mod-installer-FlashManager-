@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FlashManager</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%2307111f' width='32' height='32' rx='6'/%3E%3Cpath fill='%237ec8ff' d='M18.4 3 L8 17.2 h6.2 L11.2 29 L24.6 13.4 h-6.4 L18.4 3 z'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #07111f;
+    --bg-2: #0c1a2e;
+    --card: #10243d;
+    --card-2: #163055;
+    --line: rgba(126, 200, 255, 0.18);
+    --line-strong: rgba(170, 220, 255, 0.48);
+    --cream: #e8f3ff;
+    --muted: #8eafd4;
+    --faint: #5d7ea3;
+    --gold: #7ec8ff;
+    --ember: #3aa0ff;
+    --ember-deep: #1a5fd0;
+    --good: #7ddeb0;
+    --warn: #ffd27a;
+    --bad: #ff8d8d;
+    --shadow: 0 24px 60px rgba(0, 8, 24, 0.45);
+    --serif: "Segoe UI", sans-serif;
+    --sans: "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    color: var(--cream);
+    font-family: var(--sans);
+    background:
+      radial-gradient(900px 420px at 0% -10%, rgba(40, 140, 255, 0.32), transparent 55%),
+      radial-gradient(700px 420px at 100% 0%, rgba(120, 210, 255, 0.14), transparent 52%),
+      var(--bg);
+  }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  button:disabled { cursor: default; opacity: 0.55; }
+  ::selection { background: #1d6fe0; color: #fff; }
+  .wrap { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 48px; }
+  header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 18px; }
+  .brand { display: flex; gap: 14px; align-items: center; }
+  .mark {
+    width: 52px; height: 52px; border-radius: 16px;
+    display: grid; place-items: center; color: #f4fbff;
+    background: linear-gradient(180deg, #3d92f0, #12386e);
+    border: 1px solid rgba(190, 230, 255, 0.55);
+    box-shadow: 0 0 18px rgba(60, 160, 255, 0.45), inset 0 1px 0 rgba(255,255,255,0.28);
+  }
+  .mark svg { width: 28px; height: 28px; }
+  .eyebrow { margin: 0 0 2px; letter-spacing: 0.22em; text-transform: uppercase; font-size: 11px; color: var(--gold); }
+  h1 { margin: 0; font-family: var(--sans); font-weight: 750; font-size: 40px; letter-spacing: -0.045em; line-height: 0.95; }
+  .sub { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+  .note {
+    margin: 0 0 18px; padding: 10px 14px; border-radius: 12px;
+    background: rgba(80, 160, 255, 0.1);
+    border: 1px solid rgba(140, 200, 255, 0.35);
+    color: #d6e9ff; font-size: 13.5px; line-height: 1.45;
+  }
+  .banner {
+    margin: 0 0 14px; padding: 10px 14px; border-radius: 12px;
+    background: rgba(255, 110, 110, 0.12);
+    border: 1px solid rgba(255, 150, 150, 0.4);
+    color: #f3d2cb;
+  }
+  .banner p { margin: 0; line-height: 1.45; }
+  .banner .prep { margin-top: 10px; }
+  .layout { display: grid; grid-template-columns: 1.25fr 0.85fr; gap: 16px; }
+  .card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.025), transparent 28%), var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+  }
+  .pad { padding: 18px 18px 16px; }
+  .card h2 { margin: 0; font-family: var(--sans); font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
+  .lead { margin: 6px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.45; }
+  .pathbar { display: flex; gap: 8px; margin: 16px 0 8px; }
+  .pathbar input, .pathbar select, select.loader, .ghost, .textbtn {
+    background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px;
+  }
+  .pathbar input { flex: 1; min-width: 0; padding: 10px 12px; }
+  .pathbar select { max-width: 280px; padding: 10px 12px; }
+  .meta { display: flex; gap: 8px; align-items: center; min-height: 28px; color: var(--muted); font-size: 13px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--gold); letter-spacing: 0.04em; font-size: 12px;
+  }
+  .rows { display: flex; flex-direction: column; margin-top: 14px; }
+  .row {
+    display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center;
+    padding: 11px 2px; border-top: 1px solid var(--line);
+  }
+  .row strong { display: block; font-weight: 600; color: var(--cream); font-size: 14.5px; }
+  .row > span > span { color: var(--muted); font-size: 12.5px; }
+  .status { font-size: 12.5px; font-style: normal; color: var(--faint); text-align: right; }
+  .status.on { color: var(--good); }
+  .status.off { color: var(--bad); }
+  input[type="checkbox"] { width: 16px; height: 16px; accent-color: #2f8cff; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: end; margin-top: 8px; }
+  label.field { display: flex; flex-direction: column; gap: 6px; color: var(--muted); font-size: 12px; }
+  select.loader { padding: 8px 10px; }
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 16px; }
+  .prep {
+    border: 0; border-radius: 999px; padding: 14px 28px;
+    background: linear-gradient(180deg, var(--ember), var(--ember-deep));
+    color: #f4fbff; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700;
+    box-shadow: 0 10px 28px rgba(26, 95, 208, 0.45);
+  }
+  .prep:not(:disabled):hover { filter: brightness(1.06); }
+  .ghost, .textbtn { padding: 10px 14px; }
+  .ghost:hover, .textbtn:hover { border-color: var(--line-strong); }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .bar { height: 4px; margin-top: 14px; border-radius: 99px; background: #163055; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--gold), var(--ember)); transition: width 0.3s ease; }
+  .wait {
+    margin-top: 14px; padding: 12px; border-radius: 12px;
+    background: rgba(80, 160, 255, 0.08); border: 1px solid var(--line);
+  }
+  .wait p { margin: 0 0 10px; color: var(--muted); font-size: 13.5px; }
+  .wait .actions { margin-top: 0; }
+  .well {
+    margin-top: 14px; min-height: 250px; border-radius: 16px;
+    border: 1.5px dashed rgba(126, 200, 255, 0.45);
+    background: rgba(0, 0, 0, 0.18);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 22px; gap: 6px;
+  }
+  .well.hot { border-style: solid; border-color: var(--gold); background: rgba(80, 160, 255, 0.12); }
+  .well strong { font-family: var(--sans); font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+  .well p { margin: 0; color: var(--muted); max-width: 36ch; line-height: 1.45; }
+  .placed { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .placed li {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 8px 10px; border-radius: 10px; background: var(--bg-2); font-size: 13px;
+  }
+  .placed li.warn { box-shadow: inset 3px 0 0 var(--warn); }
+  .placed li span { color: var(--muted); text-align: right; }
+  .wide { margin-top: 16px; }
+  .steps { margin: 12px 0 0; padding-left: 1.25em; }
+  .steps li { margin: 0 0 8px; line-height: 1.45; }
+  .steps li::marker { color: var(--gold); font-weight: 650; }
+  .log { margin-top: 16px; }
+  .log ol {
+    list-style: none; margin: 12px 0 0; padding: 12px 14px; max-height: 240px; overflow: auto;
+    background: #071018; border-radius: 12px; font-family: Consolas, "Cascadia Mono", monospace;
+    font-size: 12.5px; line-height: 1.55; color: #d5e8ff;
+  }
+  .log li { white-space: pre-wrap; }
+  .log li + li { margin-top: 2px; }
+  .fine { margin: 12px 0 0; color: var(--faint); font-size: 12px; line-height: 1.45; }
+  .fine a { color: var(--gold); }
+  .runtime { margin-top: 8px; color: var(--warn); font-size: 13px; }
+  .mods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .mod {
+    display: flex; justify-content: space-between; gap: 12px; align-items: center;
+    padding: 12px 12px 12px 14px; border-radius: 14px;
+    background: rgba(8, 20, 40, 0.55); border: 1px solid var(--line);
+  }
+  .mod strong { display: block; font-size: 15px; }
+  .mod em { display: block; margin-top: 2px; color: var(--gold); font-style: normal; font-size: 12px; }
+  .mod span { display: block; margin-top: 4px; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+  .mod .get { padding: 10px 16px; flex: none; }
+  .mod .have { display: block; margin-top: 4px; color: var(--good); font-size: 12px; }
+  .modactions { display: flex; gap: 8px; align-items: center; flex: none; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .tab {
+    border: 1px solid var(--line); background: rgba(8, 20, 40, 0.45); color: var(--muted);
+    border-radius: 999px; padding: 10px 22px; letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 700; font-size: 13px;
+  }
+  .tab.on {
+    border-color: transparent; color: #f4fbff;
+    background: linear-gradient(180deg, var(--ember), var(--ember-deep));
+    box-shadow: 0 10px 28px rgba(26, 95, 208, 0.45);
+  }
+  .tab:not(.on):hover { border-color: var(--line-strong); color: var(--cream); }
+  .panel { display: flex; flex-direction: column; gap: 16px; }
+  .panel[hidden] { display: none !important; }
+  .panel .wide { margin-top: 0; }
+  .library {
+    list-style: none; margin: 14px 0 0; padding: 0;
+    display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow: auto;
+  }
+  .lib {
+    display: flex; justify-content: space-between; gap: 12px; align-items: center;
+    padding: 10px 12px; border-radius: 12px;
+    background: rgba(8, 20, 40, 0.55); border: 1px solid var(--line);
+  }
+  .lib strong { display: block; font-size: 14.5px; }
+  .lib span { display: block; margin-top: 2px; color: var(--muted); font-size: 12.5px; }
+  .remove.armed { color: #ffd0d0; border-color: rgba(255, 141, 141, 0.7); background: rgba(255, 80, 80, 0.12); }
+  @media (max-width: 860px) {
+    header, .layout { display: block; }
+    .brand { margin-bottom: 14px; }
+    h1 { font-size: 34px; }
+    .pathbar { flex-direction: column; }
+    .pathbar select { max-width: none; }
+    .mods { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="currentColor" d="M28.2 4 L12 27.2 h8.8 L17.2 44 L37 19.6 h-9.4 L28.2 4 z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="eyebrow">Red Dead Redemption 2</p>
+        <h1>FlashManager</h1>
+        <p class="sub">Prep the story-mode folder, then add or remove mods.</p>
+      </div>
+    </div>
+  </header>
+
+  <p class="note">Story mode only. Script Hook closes the game if you enter Red Dead Online, and playing Online with these files installed can cost you the account. Take the mod files out before you play Online.</p>
+  <p class="banner" id="banner" hidden></p>
+  <div class="banner" id="adminbanner" hidden>
+    <p id="admintext"></p>
+    <button class="prep" id="elevate" type="button">Run as administrator</button>
+  </div>
+
+  <section class="card pad" id="gamecard">
+    <h2>Game folder</h2>
+    <p class="lead">FlashManager looks for Steam, Epic, and Rockstar. Paste the folder that contains RDR2.exe and press Enter, or click Browse.</p>
+    <div class="pathbar">
+      <select id="candidates" hidden></select>
+      <input id="path" type="text" spellcheck="false" placeholder="Folder that contains RDR2.exe">
+      <button class="ghost" id="browse" type="button">Browse</button>
+    </div>
+    <div class="meta" id="meta"></div>
+    <div class="links">
+      <button class="textbtn" type="button" data-open="game">Game folder</button>
+      <button class="textbtn" type="button" data-open="lml">lml</button>
+      <button class="textbtn" type="button" data-open="scripts">scripts</button>
+      <button class="textbtn" type="button" data-open="manager">Mod Manager</button>
+      <button class="textbtn" type="button" data-open="backup">Backups</button>
+      <button class="textbtn" type="button" data-open="review">Needs a look</button>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="FlashManager">
+    <button class="tab on" id="tabbtn-prep" type="button" role="tab" data-tab="prep" aria-selected="true" aria-controls="tab-prep">Prep</button>
+    <button class="tab" id="tabbtn-modify" type="button" role="tab" data-tab="modify" aria-selected="false" aria-controls="tab-modify">Modify</button>
+  </nav>
+  <div class="bar" id="bar" hidden><i id="barfill"></i></div>
+  <div class="wait" id="wait" hidden>
+    <p id="waittext">Lenny's site asks the browser to prove it is a person. Download the top zip, the one named lml_rdr_beta. FlashManager will install it when the file finishes landing in Downloads.</p>
+    <div class="actions">
+      <button class="prep" id="useexisting" type="button">Install the zip in Downloads</button>
+      <button class="ghost" id="openlml" type="button">Open the download page</button>
+      <button class="textbtn" id="cancellml" type="button">Skip Lenny's</button>
+    </div>
+  </div>
+
+  <div class="panel" id="tab-prep" role="tabpanel" aria-labelledby="tabbtn-prep">
+    <section class="card pad">
+      <h2>Essentials</h2>
+      <p class="lead">Prep downloads the current Script Hook, ASI loader, Lenny's Mod Loader, and the .NET script plugin from each author's own site.</p>
+      <div class="rows" id="rows"></div>
+
+      <div class="controls">
+        <label class="field">ASI loader name
+          <select class="loader" id="loader">
+            <option value="dinput8.dll">dinput8.dll — Steam and most installs</option>
+            <option value="version.dll">version.dll — if Epic or Rockstar never loads mods</option>
+          </select>
+        </label>
+        <label class="field"><span>Already installed</span>
+          <span><input id="force" type="checkbox"> Reinstall anyway</span>
+        </label>
+      </div>
+      <p class="lead">Epic and the Rockstar launcher sometimes ignore dinput8.dll. If the game starts and mods do nothing, switch the loader to version.dll and run Prep again.</p>
+
+      <div class="actions">
+        <button class="prep" id="prep" type="button" disabled>Prep</button>
+        <button class="ghost" id="refresh" type="button">Refresh</button>
+      </div>
+      <p class="runtime" id="runtime" hidden></p>
+    </section>
+
+    <section class="card pad" id="howto">
+      <h2>How to use</h2>
+      <ol class="steps">
+        <li>Double-click <strong>Start FlashManager.bat</strong> and leave the black window open. Closing the browser does not stop it.</li>
+        <li>Check the game folder above. If yours is missing, paste the folder that contains <strong>RDR2.exe</strong> and press Enter, or click Browse. A Rockstar install under Program Files needs <strong>Run as administrator</strong> before Prep or a drop can create folders.</li>
+        <li>Click <strong>Prep</strong>. It downloads the current Script Hook, ASI loader, .NET script plugin, and Lenny's Mod Loader. Close the game first. Native Trainer stays off unless you tick it.</li>
+        <li>If Lenny's site opens, download the zip whose name starts with <strong>lml_rdr_beta</strong>. FlashManager installs it when the file finishes landing in Downloads. You can also drop that zip on the Modify tab.</li>
+        <li>Open <strong>Modify</strong> to add or remove mods and story saves. Play story mode from Steam, Epic, or the Rockstar Launcher. Do not take these files into Red Dead Online. If Epic or Rockstar starts the game and mods never load, switch the ASI loader to <strong>version.dll</strong> and run Prep again.</li>
+      </ol>
+    </section>
+  </div>
+
+  <div class="panel" id="tab-modify" role="tabpanel" aria-labelledby="tabbtn-modify" hidden>
+    <div class="layout">
+      <section class="card pad" id="dropcard">
+        <h2>Add a mod</h2>
+        <p class="lead">Drop a zip, a folder, or a loose file. Mods go into the game. A story save goes into the Rockstar profile picked below.</p>
+        <div class="well" id="well" tabindex="0">
+          <strong>Drop here</strong>
+          <p id="welltext">Zips and folders land in lml, scripts, or next to RDR2.exe. Save files are named SRDR3…</p>
+          <button class="ghost" id="pickfiles" type="button">Choose files</button>
+          <button class="textbtn" id="pickfolder" type="button">Choose a folder</button>
+        </div>
+        <input id="fileinput" type="file" multiple hidden>
+        <input id="folderinput" type="file" webkitdirectory directory multiple hidden>
+        <ul class="placed" id="placed"></ul>
+      </section>
+
+      <section class="card pad" id="librarycard">
+        <h2>In the game</h2>
+        <p class="lead">Remove takes that mod out of the game folder. The copy stays in Backups until you delete it. Script Hook and the other Prep tools stay put.</p>
+        <p class="lead" id="libraryempty">Nothing to remove yet. Drop a mod on the pad, or get one below.</p>
+        <ul class="library" id="library"></ul>
+      </section>
+    </div>
+
+    <section class="card pad" id="popular">
+      <h2>Popular mods</h2>
+      <p class="lead">Story mode. Get downloads the latest file from that author's own GitHub and puts it in the game folder. Run Prep first so Script Hook is there. Remove takes that mod back out. These are not for Red Dead Online.</p>
+      <div class="mods" id="mods"></div>
+    </section>
+
+    <section class="card pad" id="savecard">
+      <h2>Story saves</h2>
+      <p class="lead">Drop a file named SRDR30000 through SRDR30015, or a zip of those files, on the pad above. SRDR30015 is the autosave. SRDR30000 is manual slot 1, SRDR30001 is slot 2, and so on. The matching .bak file can come along.</p>
+      <div class="pathbar">
+        <select id="profiles" hidden></select>
+        <input id="profilepath" type="text" spellcheck="false" placeholder="Profile folder inside Documents\Rockstar Games\Red Dead Redemption 2\Profiles">
+        <button class="ghost" id="opensaves" type="button" data-open="saves">Open folder</button>
+      </div>
+      <p class="lead" id="slots">Looking for a Rockstar profile…</p>
+      <p class="lead">The file you replace is copied to _flashmanager_save_backup, next to the Profiles folder. If the game puts the old save back, Rockstar cloud sync is overwriting it. Turn cloud sync off for Red Dead Redemption 2 and drop the save again.</p>
+    </section>
+
+    <section class="card pad" id="howto-modify">
+      <h2>How to use</h2>
+      <ol class="steps">
+        <li>Drop a mod on the pad. A folder with <strong>install.xml</strong> goes in <strong>lml</strong>. An <strong>.asi</strong> file sits next to RDR2.exe. A C# script goes in <strong>scripts</strong>. Loose textures without install.xml, OpenIV packages, and programs are set aside under Needs a look. Nothing you drop is launched.</li>
+        <li>Under <strong>Popular mods</strong>, click <strong>Get</strong> on the ones you want. FlashManager downloads that author's latest release and installs it. <strong>Update</strong> fetches the latest release again. <strong>Remove</strong> takes it back out.</li>
+        <li>Under <strong>In the game</strong>, click <strong>Remove</strong>, then <strong>Remove now</strong>, to take a dropped mod out. The previous copy is in Backups.</li>
+        <li>To add a story save, pick your profile under Story saves, then drop the <strong>SRDR</strong> file or its zip on the pad. Launch story mode once first if no profile is listed.</li>
+      </ol>
+    </section>
+  </div>
+
+  <section class="card pad log">
+    <h2>Ledger</h2>
+    <ol id="log"><li>Prep, installs, and removals will be written here.</li></ol>
+    <p class="fine">Script Hook from dev-c.com · ASI loader from ThirteenAG on GitHub · .NET plugin from Halen84 on GitHub · Lenny's Mod Loader from rdr2mods.com. Asset mods need an install.xml or they are set aside in “Needs a look” instead of being guessed into the game. C# scripts also need <a href="https://dotnet.microsoft.com/download/dotnet-framework/net48">.NET Framework 4.8</a> and the <a href="https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist">Visual C++ 2015–2022 x64</a> runtime.</p>
+  </section>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const ROWS = [
+  ["script_hook", "Script Hook RDR2", "Alexander Blade. Loads .asi plugins."],
+  ["asi_loader", "ASI loader", "Ultimate ASI Loader. Starts Script Hook and Lenny's."],
+  ["lml", "Lenny's Mod Loader", "Asset mods go in the lml folder."],
+  ["dotnet", "ScriptHookRDR2 .NET V2", "C# scripts go in the scripts folder."],
+  ["trainer", "Native Trainer", "Optional sample plugin. Press F4 in story mode."],
+];
+
+let state = null;
+let polling = false;
+let dropping = false;
+let catalog = [];
+let armed = "";
+
+function showError(text) {
+  $("banner").hidden = !text;
+  $("banner").textContent = text || "";
+}
+
+function optionsPayload() {
+  return {
+    script_hook: box("script_hook"),
+    asi_loader: box("asi_loader"),
+    lml: box("lml"),
+    dotnet: box("dotnet"),
+    native_trainer: box("trainer"),
+    loader_name: $("loader").value,
+    force: $("force").checked,
+  };
+}
+
+function box(key) {
+  const input = document.querySelector(`input[data-key="${key}"]`);
+  return input ? input.checked : true;
+}
+
+function render() {
+  if (!state) return;
+  const game = state.game;
+  const meta = [];
+  if (game) {
+    meta.push(`<span class="pill">${game.platform}</span>`);
+    meta.push(game.version ? `Game ${game.version}` : "Game version unread");
+    if (game.running) meta.push("The game is open — close it before Prep, a drop, or Remove");
+  } else {
+    meta.push("Point this at the folder that contains RDR2.exe");
+  }
+  $("meta").innerHTML = meta.join(" ");
+
+  const select = $("candidates");
+  const options = state.candidates || [];
+  if (options.length > 1) {
+    select.hidden = false;
+    if (document.activeElement !== select) {
+      const current = select.value;
+      const signature = options.map((item) => item.path).join("|");
+      if (select.dataset.signature !== signature) {
+        select.dataset.signature = signature;
+        select.innerHTML = options.map((item) =>
+          `<option value="${escapeAttr(item.path)}">${escapeText(item.platform)} — ${escapeText(item.path)}</option>`
+        ).join("");
+      }
+      const match = options.find((item) => game && item.path === game.path);
+      select.value = match ? match.path : (options.some((item) => item.path === current) ? current : options[0].path);
+    }
+  } else {
+    select.hidden = true;
+  }
+
+  const saved = state.options || {};
+  if (document.activeElement !== $("loader")) $("loader").value = saved.loader_name || "dinput8.dll";
+  if (document.activeElement !== $("force")) $("force").checked = !!saved.force;
+  if (document.activeElement !== $("path")) $("path").value = game ? game.path : "";
+
+  if (!$("rows").childElementCount) {
+    $("rows").innerHTML = ROWS.map(([key, title, detail]) => {
+      const checked = key === "trainer" ? !!saved.native_trainer : saved[key] !== false;
+      return `<label class="row" data-row="${key}">
+        <input type="checkbox" data-key="${key}" ${checked ? "checked" : ""}>
+        <span><strong>${title}</strong><span>${detail}</span></span>
+        <em class="status"></em>
+      </label>`;
+    }).join("");
+  }
+  ROWS.forEach(([key]) => {
+    const item = (state.components || {})[key] || {};
+    const on = !!item.present;
+    const status = $("rows").querySelector(`[data-row="${key}"] .status`);
+    status.textContent = on ? (item.version || "In place") : "Missing";
+    status.className = `status ${on ? "on" : "off"}`;
+  });
+
+  const job = state.job || {};
+  const running = !!job.running;
+  $("prep").disabled = !game || running || !!state.write_blocked;
+  $("prep").textContent = running ? (job.waiting === "lml" ? "Waiting for Lenny's" : "Working") : "Prep";
+  $("bar").hidden = !running && !(job.progress > 0 && job.lines && job.lines.length);
+  $("barfill").style.width = `${job.progress || 0}%`;
+  $("wait").hidden = job.waiting !== "lml";
+  const candidate = job.lml_candidate;
+  $("useexisting").disabled = !candidate;
+  $("useexisting").textContent = candidate ? `Install ${candidate}` : "Install the zip in Downloads";
+
+  const log = job.lines && job.lines.length ? job.lines : ["Prep, installs, and removals will be written here."];
+  const list = $("log");
+  const atBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 28;
+  list.innerHTML = log.map((line) => `<li>${escapeText(line)}</li>`).join("");
+  if (atBottom) list.scrollTop = list.scrollHeight;
+
+  const placed = job.placed || [];
+  $("placed").innerHTML = placed.map((item) =>
+    `<li class="${item.tone === "warn" ? "warn" : ""}"><strong>${escapeText(item.label)}</strong><span>${escapeText(item.where)}</span></li>`
+  ).join("");
+
+  const admin = $("adminbanner");
+  if (state.needs_admin) {
+    admin.hidden = false;
+    $("admintext").textContent = "Windows blocked changes because the game is in a protected folder such as Program Files. FlashManager has to run as administrator to create scripts and install mods.";
+    $("elevate").hidden = false;
+  } else if (state.write_blocked) {
+    admin.hidden = false;
+    $("admintext").textContent = "Windows still blocked the game folder. Right-click the Red Dead Redemption 2 folder, open Properties, then Security, and allow Modify for your account.";
+    $("elevate").hidden = true;
+  } else {
+    admin.hidden = true;
+  }
+
+  const notes = [];
+  if (state.runtime && state.runtime.dotnet48 === false) notes.push(".NET Framework 4.8 is not installed. C# scripts need it.");
+  if (state.runtime && state.runtime.vcpp === false) notes.push("The Visual C++ 2015–2022 x64 runtime is not installed. Script Hook and the .NET plugin need it.");
+  $("runtime").hidden = notes.length === 0;
+  $("runtime").textContent = notes.join(" ");
+  const saves = state.saves || { profiles: [], selected: null };
+  const profiles = $("profiles");
+  const saveOptions = saves.profiles || [];
+  if (saveOptions.length > 1) {
+    profiles.hidden = false;
+    if (document.activeElement !== profiles) {
+      const signature = saveOptions.map((item) => item.path).join("|");
+      if (profiles.dataset.signature !== signature) {
+        profiles.dataset.signature = signature;
+        profiles.innerHTML = saveOptions.map((item) => {
+          const count = (item.slots || []).length;
+          const detail = count ? `${count} save${count === 1 ? "" : "s"}` : "no saves yet";
+          return `<option value="${escapeAttr(item.path)}">${escapeText(item.id)} — ${detail}</option>`;
+        }).join("");
+      }
+      if (saves.selected) profiles.value = saves.selected;
+    }
+  } else {
+    profiles.hidden = true;
+  }
+  if (document.activeElement !== $("profilepath")) $("profilepath").value = saves.selected || "";
+  const current = saveOptions.find((item) => item.path === saves.selected);
+  if (!saveOptions.length && !saves.selected) {
+    $("slots").textContent = "No profile yet. Launch story mode once and make a save. FlashManager looks in Documents\\Rockstar Games\\Red Dead Redemption 2\\Profiles.";
+  } else if (!saves.selected) {
+    $("slots").textContent = "More than one Rockstar profile is on this PC. Pick the one this save belongs to.";
+  } else if (current && current.slots && current.slots.length) {
+    $("slots").textContent = `Already in this profile: ${current.slots.join(", ")}.`;
+  } else {
+    $("slots").textContent = "This profile has no story saves yet. Drop an SRDR file on the pad.";
+  }
+  paintMods();
+  paintLibrary();
+  if (!dropping) {
+    $("welltext").textContent = game
+      ? "An install.xml folder goes in lml. An .asi sits next to RDR2.exe. A C# .dll goes in scripts. An SRDR save goes into the profile below."
+      : "Choose the game folder before dropping mods. A story save can still be dropped once a profile is selected below.";
+  }
+}
+
+function busy() {
+  const running = !!(state && state.job && state.job.running);
+  const ready = !!(state && state.game);
+  const blocked = !!(state && state.write_blocked);
+  return { running, ready, blocked, disabled: running || !ready || blocked };
+}
+
+function paintMods() {
+  const box = $("mods");
+  if (!box) return;
+  const installed = (state && state.mods) || {};
+  const { running, ready, blocked } = busy();
+  const signature = JSON.stringify([catalog.map((mod) => mod.id), installed, running, ready, blocked, armed]);
+  if (box.dataset.signature === signature) return;
+  box.dataset.signature = signature;
+  const off = running || !ready || blocked ? "disabled" : "";
+  box.innerHTML = catalog.map((mod) => {
+    const version = installed[mod.id];
+    const removeId = `popular:${mod.id}`;
+    const actions = version
+      ? `<div class="modactions">
+          <button class="ghost get" type="button" data-mod="${escapeAttr(mod.id)}" ${off}>Update</button>
+          <button class="textbtn remove ${armed === removeId ? "armed" : ""}" type="button" data-remove="${escapeAttr(removeId)}" ${off}>${armed === removeId ? "Remove now" : "Remove"}</button>
+        </div>`
+      : `<button class="prep get" type="button" data-mod="${escapeAttr(mod.id)}" ${off}>Get</button>`;
+    return `<article class="mod">
+      <div>
+        <strong>${escapeText(mod.name)}</strong>
+        <em>${escapeText(mod.author)}</em>
+        <span>${escapeText(mod.blurb)}</span>
+        ${version ? `<span class="have">Installed ${escapeText(version)}</span>` : ""}
+      </div>
+      ${actions}
+    </article>`;
+  }).join("");
+}
+
+function paintLibrary() {
+  const box = $("library");
+  const empty = $("libraryempty");
+  if (!box || !empty) return;
+  const items = (state && state.library) || [];
+  const { running, ready, blocked } = busy();
+  const signature = JSON.stringify([items, running, ready, blocked, armed]);
+  if (box.dataset.signature === signature) return;
+  box.dataset.signature = signature;
+  empty.hidden = items.length > 0;
+  const off = running || !ready || blocked ? "disabled" : "";
+  box.innerHTML = items.map((item) => `<li class="lib">
+    <div>
+      <strong>${escapeText(item.name)}</strong>
+      <span>${escapeText(item.kind)} · ${escapeText(item.detail)}</span>
+    </div>
+    <button class="textbtn remove ${armed === item.id ? "armed" : ""}" type="button" data-remove="${escapeAttr(item.id)}" ${off}>${armed === item.id ? "Remove now" : "Remove"}</button>
+  </li>`).join("");
+}
+
+function showTab(name) {
+  const tab = name === "modify" ? "modify" : "prep";
+  $("tab-prep").hidden = tab !== "prep";
+  $("tab-modify").hidden = tab !== "modify";
+  document.querySelectorAll(".tab").forEach((button) => {
+    const on = button.dataset.tab === tab;
+    button.classList.toggle("on", on);
+    button.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  try { sessionStorage.setItem("flashmanager-tab", tab); } catch (error) { /* the page still switches */ }
+}
+
+function escapeText(value) {
+  return String(value ?? "").replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
+}
+function escapeAttr(value) {
+  return escapeText(value).replace(/"/g, "&quot;");
+}
+
+async function refresh() {
+  if (polling) return;
+  polling = true;
+  try {
+    const response = await fetch("/api/status");
+    state = await response.json();
+    render();
+  } catch (error) {
+    showError("FlashManager lost the connection. Start it again from the bat file.");
+  } finally {
+    polling = false;
+  }
+}
+
+async function post(url, payload) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "That did not work.");
+  return data;
+}
+
+async function saveOptions() {
+  try { await post("/api/options", optionsPayload()); } catch (error) { showError(error.message); }
+}
+
+$("rows").addEventListener("change", saveOptions);
+$("loader").addEventListener("change", saveOptions);
+$("force").addEventListener("change", saveOptions);
+
+document.querySelector(".tabs").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-tab]");
+  if (!button) return;
+  showTab(button.dataset.tab);
+});
+
+document.body.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-remove]");
+  if (!button || button.disabled) return;
+  const id = button.dataset.remove;
+  if (armed !== id) {
+    armed = id;
+    paintMods();
+    paintLibrary();
+    return;
+  }
+  armed = "";
+  showError("");
+  try {
+    await post("/api/mods/remove", { id });
+    await refresh();
+  } catch (error) {
+    showError(error.message);
+    paintMods();
+    paintLibrary();
+  }
+});
+
+$("mods").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-mod]");
+  if (!button || button.disabled) return;
+  armed = "";
+  showError("");
+  try {
+    await post("/api/mods/install", { id: button.dataset.mod });
+    await refresh();
+  } catch (error) {
+    showError(error.message);
+  }
+});
+
+$("elevate").addEventListener("click", async () => {
+  showError("");
+  $("elevate").disabled = true;
+  try {
+    await post("/api/elevate", {});
+    showError("Allow the Windows prompt if it is still open. FlashManager will open again as administrator. You can close this tab.");
+  } catch (error) {
+    showError(error.message);
+    $("elevate").disabled = false;
+  }
+});
+
+$("prep").addEventListener("click", async () => {
+  showError("");
+  try {
+    await post("/api/prep", optionsPayload());
+    await refresh();
+  } catch (error) {
+    showError(error.message);
+  }
+});
+
+$("refresh").addEventListener("click", refresh);
+$("browse").addEventListener("click", async () => {
+  showError("");
+  $("browse").disabled = true;
+  try {
+    const data = await post("/api/browse");
+    if (!data.game) return;
+    await refresh();
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    $("browse").disabled = false;
+  }
+});
+
+$("path").addEventListener("keydown", async (event) => {
+  if (event.key !== "Enter") return;
+  showError("");
+  try {
+    await post("/api/game", { path: $("path").value.trim() });
+    await refresh();
+  } catch (error) {
+    showError(error.message);
+  }
+});
+
+$("profiles").addEventListener("change", async () => {
+  showError("");
+  try {
+    await post("/api/profile", { path: $("profiles").value });
+    await refresh();
+  } catch (error) {
+    showError(error.message);
+  }
+});
+
+$("profilepath").addEventListener("keydown", async (event) => {
+  if (event.key !== "Enter") return;
+  showError("");
+  try {
+    await post("/api/profile", { path: $("profilepath").value.trim() });
+    await refresh();
+  } catch (error) {
+    showError(error.message);
+  }
+});
+
+$("candidates").addEventListener("change", async () => {
+  try {
+    await post("/api/game", { path: $("candidates").value });
+    await refresh();
+  } catch (error) {
+    showError(error.message);
+  }
+});
+
+document.body.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-open]");
+  if (!button) return;
+  try { await post("/api/open", { target: button.dataset.open }); }
+  catch (error) { showError(error.message); }
+});
+
+$("openlml").addEventListener("click", () => post("/api/lml", { action: "open" }).catch((error) => showError(error.message)));
+$("cancellml").addEventListener("click", () => post("/api/lml", { action: "cancel" }).catch((error) => showError(error.message)));
+$("useexisting").addEventListener("click", () => post("/api/lml", { action: "use_existing" }).catch((error) => showError(error.message)));
+
+function filesFromList(list) {
+  return [...list].map((file) => ({ file, path: file.webkitRelativePath || file.name }));
+}
+
+async function readEntry(entry, prefix, out) {
+  if (entry.isFile) {
+    const file = await new Promise((resolve, reject) => entry.file(resolve, reject));
+    out.push({ file, path: prefix + file.name });
+    return;
+  }
+  if (!entry.isDirectory) return;
+  const reader = entry.createReader();
+  const children = [];
+  while (true) {
+    const batch = await new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+    if (!batch.length) break;
+    children.push(...batch);
+  }
+  for (const child of children) await readEntry(child, `${prefix}${entry.name}/`, out);
+}
+
+async function itemsFromDrop(data) {
+  const out = [];
+  const entries = [...(data.items || [])].map((item) => item.webkitGetAsEntry && item.webkitGetAsEntry()).filter(Boolean);
+  if (entries.length) {
+    for (const entry of entries) await readEntry(entry, "", out);
+    return out;
+  }
+  return filesFromList(data.files || []);
+}
+
+async function upload(items) {
+  if (!items.length) return;
+  showError("");
+  dropping = true;
+  $("welltext").textContent = `Sending ${items.length} file${items.length === 1 ? "" : "s"}…`;
+  try {
+    const begun = await post("/api/drop/begin");
+    for (let index = 0; index < items.length; index += 1) {
+      const item = items[index];
+      const response = await fetch(`/api/drop/${begun.id}`, {
+        method: "PUT",
+        headers: { "X-File-Path": encodeURIComponent(item.path) },
+        body: item.file,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || `Could not send ${item.path}`);
+      $("welltext").textContent = `Sending ${index + 1} of ${items.length}`;
+    }
+    $("welltext").textContent = "Sorting…";
+    const done = await fetch(`/api/drop/${begun.id}/finish`, { method: "POST" });
+    const data = await done.json().catch(() => ({}));
+    if (!done.ok || data.ok === false) {
+      const detail = Array.isArray(data.lines) && data.lines.length ? data.lines[data.lines.length - 1] : "";
+      throw new Error(data.error || detail || "Could not place those files.");
+    }
+    await refresh();
+  } finally {
+    dropping = false;
+  }
+}
+
+async function acceptDrop(event) {
+  event.preventDefault();
+  $("well").classList.remove("hot");
+  try {
+    await upload(await itemsFromDrop(event.dataTransfer));
+  } catch (error) {
+    showError(error.message);
+    await refresh();
+  }
+}
+$("well").addEventListener("dragover", (event) => {
+  event.preventDefault();
+  $("well").classList.add("hot");
+});
+$("well").addEventListener("dragleave", () => $("well").classList.remove("hot"));
+$("well").addEventListener("drop", (event) => {
+  event.stopPropagation();
+  acceptDrop(event);
+});
+document.addEventListener("dragover", (event) => {
+  event.preventDefault();
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+});
+document.addEventListener("drop", (event) => {
+  if (event.target.closest && event.target.closest("#well")) return;
+  acceptDrop(event);
+});
+
+$("pickfiles").addEventListener("click", (event) => { event.stopPropagation(); $("fileinput").click(); });
+$("pickfolder").addEventListener("click", (event) => { event.stopPropagation(); $("folderinput").click(); });
+$("fileinput").addEventListener("change", async () => {
+  try { await upload(filesFromList($("fileinput").files)); }
+  catch (error) { showError(error.message); }
+  $("fileinput").value = "";
+});
+$("folderinput").addEventListener("change", async () => {
+  try { await upload(filesFromList($("folderinput").files)); }
+  catch (error) { showError(error.message); }
+  $("folderinput").value = "";
+});
+
+try { showTab(sessionStorage.getItem("flashmanager-tab") || "prep"); } catch (error) { showTab("prep"); }
+refresh();
+loadMods();
+setInterval(refresh, 1000);
+
+async function loadMods() {
+  try {
+    const response = await fetch("/api/mods");
+    const data = await response.json();
+    catalog = data.mods || [];
+    paintMods();
+  } catch (error) {
+    showError("The popular mods list did not load. Start FlashManager again from the bat file.");
+  }
+}
+</script>
+</body>
+</html>
